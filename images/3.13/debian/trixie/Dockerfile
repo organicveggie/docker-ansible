@@ -1,4 +1,95 @@
-FROM buildpack-deps:trixie
+# ==========================================
+# Stage 1: Version Resolver (Always runs, but tiny)
+# ==========================================
+FROM buildpack-deps:trixie AS version-resolver
+RUN <<RUN_CMD_EOF
+apt-get update
+apt-get install -y curl
+rm -rf /var/lib/apt/lists/*
+RUN_CMD_EOF
+
+# Resolve the version and save it to a file
+RUN <<RUN_CMD_EOF
+set -eux
+LATEST_PY=$(curl -s https://www.python.org/ftp/python/ | grep -o '3\.13\.[0-9]\+/' | cut -d '/' -f1 | sort -V | tail -n1)
+echo "${LATEST_PY}" > /tmp/python_version
+RUN_CMD_EOF
+
+# ==========================================
+# Stage 2: Build Environment
+# ==========================================
+FROM buildpack-deps:trixie AS builder
+
+ENV LANG=C.UTF-8
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+
+RUN <<RUN_CMD_EOF
+apt-get update
+apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libbz2-dev \
+    libdb5.3-dev \
+    libexpat1-dev \
+    libffi-dev \
+    libgdbm-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libuuid1 \
+    software-properties-common \
+    zlib1g-dev
+RUN_CMD_EOF
+
+# Resolve, download, and compile the latest Python 3.13.x
+COPY --from=version-resolver /tmp/python_version /tmp/python_version
+RUN <<RUN_CMD_EOF
+set -eux
+VERSION=$(cat /tmp/python_version)
+echo "Building Python ${VERSION}..."
+curl -O "https://www.python.org/ftp/python/${VERSION}/Python-${VERSION}.tar.xz"
+tar -xf "Python-${VERSION}.tar.xz"
+cd "Python-${VERSION}"
+
+# Configure with a custom prefix to make copying easy in the next stage
+./configure --enable-loadable-sqlite-extensions \
+    --enable-optimizations \
+    --enable-option-checking=fatal \
+    --prefix=/opt/python3.13 \
+    --with-ensurepip=install
+
+make -j$(nproc)
+make install
+RUN_CMD_EOF
+
+RUN <<RUN_CMD_EOF
+# Install required libraries for installing Ansible
+apt-get install -y --no-install-recommends \
+    libffi-dev \
+    libonig-dev \
+    libssl-dev \
+    libyaml-dev
+rm -rf /var/lib/apt/lists/*
+RUN_CMD_EOF
+
+ENV PYTHON_PATH=/opt/python3.13/bin/python3.13
+
+# Install Ansible via Pip
+RUN --mount=type=bind,source=images/requirements.txt,target=/tmp/requirements.txt <<RUN_CMD_EOF
+${PYTHON_PATH} -m pip install --no-cache-dir --upgrade pip
+${PYTHON_PATH} -m pip install --no-cache-dir -r /tmp/requirements.txt
+RUN_CMD_EOF
+
+# ==========================================
+# Stage 3: Final Lightweight Runtime Image
+# ==========================================
+FROM buildpack-deps:trixie-curl
 
 # Set build-time argument for build version, with a default value
 ARG IMAGE_BUILD_VERSION=v0.0.0
@@ -13,42 +104,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN <<RUN_CMD_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
-    software-properties-common \
-    lsb-release
-RUN_CMD_EOF
-
-RUN <<RUN_CMD_EOF
-add-apt-repository ppa:deadsnakes/ppa
-apt-get update
-apt-get install -y --no-install-recommends \
-    python3.13 \
-    python3.13-dev
-RUN_CMD_EOF
-
-RUN <<RUN_CMD_EOF
-mkdir /tmp/python3.13-pip-install
-curl https://bootstrap.pypa.io/get-pip.py -o /tmp/python3.13-pip-install/get-pip.py
-python3.13 /tmp/python3.13-pip-install/get-pip.py
-rm -fR /tmp/python3.13-pip-install
-
-# Register the native Ubuntu python3 (3.14) and the new python3.13
-update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
-update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 2
-
-# Force the system to use Python 3.13 non-interactively
-update-alternatives --set python3 /usr/bin/python3.13
-/usr/bin/python3 --version
-RUN_CMD_EOF
-
-
-RUN <<RUN_CMD_EOF
-apt-get update
-apt-get install -y --no-install-recommends \
     iproute2 \
-    libffi-dev \
-    libssl-dev \
-    libyaml-dev \
-    libonig-dev \
+    libffi8 \
+    liblzma5 \
+    libonig5 \
+    libreadline8 \
+    libsqlite3-0 \
+    libssl3 \
+    libbz2-1.0 \
+    lsb-release \
     locales \
     rsyslog \
     systemd \
@@ -60,20 +124,34 @@ apt-get clean
 rm -fR /var/lib/apt/lists/*
 rm -fR /usr/share/doc
 rm -fR /usr/share/man
-
-# Remove useless Python environment warning flag.
-rm -rf /usr/lib/python3.12/EXTERNALLY-MANAGED
 RUN_CMD_EOF
 
-RUN sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
+ENV PYTHON_PATH=/opt/python3.13
+
+# Copy the entire compiled Python directory from the builder stage
+COPY --from=builder ${PYTHON_PATH} ${PYTHON_PATH}
+
+# Create the symlinks to the custom Python installation into the system PATH
+RUN <<RUN_CMD_EOF
+ln -sf ${PYTHON_PATH}/bin/python3.13 /usr/local/bin/python3.13
+ln -sf ${PYTHON_PATH}/bin/pip3.13 /usr/local/bin/pip3
+ln -sf /usr/local/bin/python3.13 /usr/local/bin/python3
+
+ln -sf ${PYTHON_PATH}/bin/ansible /usr/local/bin/ansible
+
+python3 --version
+pip3 --version
+ansible --version
+RUN_CMD_EOF
+
+RUN <<RUN_CMD_EOF
+# Remove useless Python environment warning flag.
+rm -rf /usr/lib/python3.14/EXTERNALLY-MANAGED
+
+sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
 # Fix potential UTF-8 errors with ansible-test.
-RUN locale-gen en_US.UTF-8
-
-# Install Ansible via Pip
-RUN --mount=type=bind,source=images/requirements.txt,target=/tmp/requirements.txt <<RUN_CMD_EOF
-pip install --no-cache-dir --upgrade pip
-pip install --no-cache-dir -r /tmp/requirements.txt
+locale-gen en_US.UTF-8
 RUN_CMD_EOF
 
 COPY images/initctl_faker .
@@ -107,4 +185,3 @@ LABEL org.opencontainers.image.authors="Sean Laurent" \
 
 VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
 CMD ["/lib/systemd/systemd"]
-# ENTRYPOINT ["python3.13"]
