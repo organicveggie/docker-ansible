@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directories:
+      - "/images/3.12/*/*/"
+      - "/images/3.13/*/*/"
+      - "/images/3.14/*/*/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
