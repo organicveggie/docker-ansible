@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:24.04 AS builder
+FROM buildpack-deps:26.04 AS builder
 
 RUN <<RUN_CMD_EOF
 apt-get update
