@@ -32,7 +32,7 @@ jobs:
 
     runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
 
-    name: Build py${{ matrix.python }}-${{ matrix.os-config.os }}-${{ matrix.os-config.release }}-${{ matrix.platform }}
+    name: Build py${{ matrix.python }}--${{ matrix.os-config.release }}-${{ matrix.platform }}
 
     steps:
       - name: Checkout
@@ -131,7 +131,7 @@ jobs:
           PYTHON="${{ matrix.python }}"
           OS="${{ matrix.os-config.os }}"
           RELEASE="${{ matrix.os-config.release }}"
-          SUFFIX="-${OS}-${RELEASE}-py${PYTHON}"
+          SUFFIX="-py${PYTHON}-${RELEASE}"
 
           ARGS=""
           PRIMARY=""
