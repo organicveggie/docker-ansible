@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
-FROM buildpack-deps:25.10 AS version-resolver
+FROM buildpack-deps:26.04 AS version-resolver
 RUN <<RUN_CMD_EOF
 apt-get update
 apt-get install -y curl
@@ -18,7 +18,7 @@ RUN_CMD_EOF
 # ==========================================
 # Stage 2: Build Environment
 # ==========================================
-FROM buildpack-deps:25.10 AS builder
+FROM buildpack-deps:26.04 AS builder
 
 ENV LANG=C.UTF-8
 
@@ -88,7 +88,7 @@ RUN_CMD_EOF
 # ==========================================
 # Stage 3: Final Lightweight Runtime Image
 # ==========================================
-FROM buildpack-deps:25.10-curl
+FROM buildpack-deps:26.04-curl
 
 # Set build-time argument for build version, with a default value
 ARG IMAGE_BUILD_VERSION=v0.0.0
