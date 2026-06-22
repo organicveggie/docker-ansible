@@ -26,7 +26,6 @@ apt-get install -y --no-install-recommends \
     python3-setuptools \
     python3-pip \
     python3-yaml \
-    software-properties-common \
     zlib1g-dev
 
 # Clean up APT cache to reduce image size
@@ -81,7 +80,6 @@ apt-get install -y --no-install-recommends \
     python3-pip \
     python3-yaml \
     rsyslog \
-    software-properties-common \
     systemd \
     systemd-cron \
     sudo

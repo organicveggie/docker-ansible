@@ -43,7 +43,6 @@ apt-get install -y --no-install-recommends \
     libsqlite3-dev \
     libssl-dev \
     libuuid1 \
-    software-properties-common \
     zlib1g-dev
 RUN_CMD_EOF
 
@@ -101,9 +100,11 @@ ENV LANG=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
 
+# Install runtime libraries
 RUN <<RUN_CMD_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
+    curl \
     iproute2 \
     libffi8 \
     liblzma5 \
@@ -112,8 +113,12 @@ apt-get install -y --no-install-recommends \
     libsqlite3-0 \
     libssl3 \
     libbz2-1.0 \
-    lsb-release \
+    libuuid1 \
     locales \
+    lsb-release \
+    python3 \
+    python3-pip \
+    python3-yaml \
     rsyslog \
     systemd \
     systemd-cron \
