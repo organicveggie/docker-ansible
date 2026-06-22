@@ -100,11 +100,11 @@ jobs:
         python: [3.12, 3.13, 3.14]
         platform: [linux/amd64, linux/arm64]
         os-config:
-          - { os: "debian", release: "bookworm" }
-          - { os: "debian", release: "trixie" }
-          - { os: "ubuntu", release: "24.04" }
-          - { os: "ubuntu", release: "25.10" }
-          - { os: "ubuntu", release: "26.04" }
+          - { os: "debian", release: "bookworm", alias: "" }
+          - { os: "debian", release: "trixie", alias: "" }
+          - { os: "ubuntu", release: "24.04", alias: "noble" }
+          - { os: "ubuntu", release: "25.10", alias: "questing" }
+          - { os: "ubuntu", release: "26.04", alias: "resolute" }
 
     steps:
       - name: Download digests
@@ -133,6 +133,8 @@ jobs:
           RELEASE="${{ matrix.os-config.release }}"
           SUFFIX="-py${PYTHON}-${RELEASE}"
 
+          RELEASE_ALIAS="${{ matrix.os-config.alias }}"
+
           ARGS=""
           PRIMARY=""
 
@@ -144,11 +146,27 @@ jobs:
 
             # Full version tag for all combinations, including pre-releases.
             ARGS+=" -t ${IMAGE}:${VERSION}${SUFFIX}"
+            if [ "$OS" = "ubuntu" ]; then
+              ARGS+=" -t ${IMAGE}:${VERSION}-py${PYTHON}-${RELEASE_ALIAS}"
+            fi
+
+            # Enable "latest" tag with the full suffix and release alias.
+            # e.g. "py3.12-bookworm-latest", "py3.13-25.10-latest", etc.
+            ARGS+=" -t ${IMAGE}:"py${PYTHON}-${RELEASE}-latest"
+            if [ -n "${RELEASE_ALIAS}" ]; then
+              ARGS+=" -t ${IMAGE}:py${PYTHON}-${RELEASE_ALIAS}-latest"
+            fi
 
             # Major.minor and major tags only for stable releases.
             if [[ "$VERSION" != *-* ]]; then
               ARGS+=" -t ${IMAGE}:${MAJOR_MINOR}${SUFFIX}"
               ARGS+=" -t ${IMAGE}:${MAJOR}${SUFFIX}"
+
+              # Major.minor and major with release alias.
+              if [ -n "${RELEASE_ALIAS}" ]; then
+                ARGS+=" -t ${IMAGE}:${MAJOR_MINOR}-py${PYTHON}-${RELEASE_ALIAS}"
+                ARGS+=" -t ${IMAGE}:${MAJOR}-py${PYTHON}-${RELEASE_ALIAS}"
+              fi
 
               # (trixie, 3.14), is the canonical image: also gets bare semver + latest.
               if [ "$RELEASE" = "trixie" ] && [ "$PYTHON" = "3.14" ]; then
