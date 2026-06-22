@@ -36,7 +36,6 @@ OS_RELEASE_MAP: dict[OSRelease, OSName] = {
     OSRelease.STONKING: OSName.UBUNTU,
 }
 
-
 OS_DEFAULT_PYTHON_VERSION: dict[OSRelease, str] = {
     OSRelease.BOOKWORM: "3.11",
     OSRelease.TRIXIE: "3.14",
@@ -45,7 +44,6 @@ OS_DEFAULT_PYTHON_VERSION: dict[OSRelease, str] = {
     OSRelease.RESOLUTE: "3.14",
     OSRelease.STONKING: "3.14",
 }
-
 
 VERSIONS: dict[str, list[OSRelease]] = {
     "3.14": [
@@ -76,7 +74,9 @@ VERSIONS: dict[str, list[OSRelease]] = {
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate Dockerfiles from a Jinja2 template.")
+    parser = argparse.ArgumentParser(
+        description="Generate Dockerfiles from a Jinja2 template."
+    )
     parser.add_argument(
         "--default-template",
         type=Path,
@@ -98,7 +98,7 @@ def generate(default_template_path: Path, custom_template_path: Path) -> None:
     custom_template = env.get_template(custom_template_path.name)
 
     for python_version, os_releases in VERSIONS.items():
-        py_major, py_minor = python_version.split('.')
+        py_major, py_minor = python_version.split(".")
         for os_release in os_releases:
             os_name = OS_RELEASE_MAP[os_release]
             out_dir = IMAGES_DIR / python_version / os_name / os_release
@@ -122,7 +122,9 @@ def generate(default_template_path: Path, custom_template_path: Path) -> None:
                     os_release=os_release.value,
                 )
             )
-            print(f"wrote {out_path.relative_to(REPO_ROOT)} from {template_path.relative_to(REPO_ROOT)}")
+            print(
+                f"wrote {out_path.relative_to(REPO_ROOT)} from {template_path.relative_to(REPO_ROOT)}"
+            )
 
 
 def main() -> None:
