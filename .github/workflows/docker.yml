@@ -105,6 +105,7 @@ jobs:
           - { os: "ubuntu", release: "24.04" }
           - { os: "ubuntu", release: "25.10" }
           - { os: "ubuntu", release: "26.04" }
+
     steps:
       - name: Download digests
         uses: actions/download-artifact@v8
