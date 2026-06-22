@@ -38,7 +38,7 @@ OS_RELEASE_MAP: dict[OSRelease, OSName] = {
 
 
 OS_DEFAULT_PYTHON_VERSION: dict[OSRelease, str] = {
-    OSRelease.BOOKWORM: "3.12",
+    OSRelease.BOOKWORM: "3.11",
     OSRelease.TRIXIE: "3.14",
     OSRelease.NOBLE: "3.12",
     OSRelease.QUESTING: "3.13",

@@ -151,7 +151,7 @@ RUN_CMD_EOF
 
 RUN <<RUN_CMD_EOF
 # Remove useless Python environment warning flag.
-rm -rf /usr/lib/python3.12/EXTERNALLY-MANAGED
+rm -rf /usr/lib/python3.11/EXTERNALLY-MANAGED
 
 sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
