@@ -1,0 +1,154 @@
+# ==========================================
+# Stage 1: Version Resolver (Always runs, but tiny)
+# ==========================================
+FROM buildpack-deps:{{ os_release }} AS version-resolver
+RUN <<RUN_CMD_EOF
+apt-get update
+apt-get install -y curl
+rm -rf /var/lib/apt/lists/*
+RUN_CMD_EOF
+
+# Resolve the version and save it to a file
+RUN <<RUN_CMD_EOF
+set -eux
+LATEST_PY=$(curl -s https://www.python.org/ftp/python/ | grep -o '{{ python_major_version }}\.{{ python_minor_version }}\.[0-9]\+/' | cut -d '/' -f1 | sort -V | tail -n1)
+echo "${LATEST_PY}" > /tmp/python_version
+RUN_CMD_EOF
+
+# ==========================================
+# Stage 2: Build Environment
+# ==========================================
+FROM buildpack-deps:{{ os_release }} AS builder
+
+ENV LANG=C.UTF-8
+
+{% if os_name in ['debian', 'ubuntu'] -%}
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+{% endif %}
+
+RUN <<RUN_CMD_EOF
+apt-get update
+apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    libbz2-dev \
+    libdb5.3-dev \
+    libexpat1-dev \
+    libffi-dev \
+    libgdbm-dev \
+    liblzma-dev \
+    libncurses5-dev \
+    libncursesw5-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libuuid1 \
+    zlib1g-dev
+RUN_CMD_EOF
+
+# Resolve, download, and compile the latest Python {{ python_version }}.x
+COPY --from=version-resolver /tmp/python_version /tmp/python_version
+RUN <<RUN_CMD_EOF
+set -eux
+VERSION=$(cat /tmp/python_version)
+echo "Building Python ${VERSION}..."
+curl -O "https://www.python.org/ftp/python/${VERSION}/Python-${VERSION}.tar.xz"
+tar -xf "Python-${VERSION}.tar.xz"
+cd "Python-${VERSION}"
+
+# Configure with a custom prefix to make copying easy in the next stage
+./configure --enable-loadable-sqlite-extensions \
+    --enable-optimizations \
+    --enable-option-checking=fatal \
+    --prefix=/opt/python{{ python_version }} \
+    --with-ensurepip=install
+
+make -j$(nproc)
+make install
+RUN_CMD_EOF
+
+RUN <<RUN_CMD_EOF
+# Install required libraries for installing Ansible
+apt-get install -y --no-install-recommends \
+    libffi-dev \
+    libonig-dev \
+    libssl-dev \
+    libyaml-dev
+rm -rf /var/lib/apt/lists/*
+RUN_CMD_EOF
+
+ENV PYTHON_PATH=/opt/python{{ python_version }}/bin/python{{ python_version }}
+
+# Install Ansible via Pip
+RUN --mount=type=bind,source=images/requirements.txt,target=/tmp/requirements.txt <<RUN_CMD_EOF
+${PYTHON_PATH} -m pip install --no-cache-dir --upgrade pip
+${PYTHON_PATH} -m pip install --no-cache-dir -r /tmp/requirements.txt
+RUN_CMD_EOF
+
+# ==========================================
+# Stage 3: Final Lightweight Runtime Image
+# ==========================================
+FROM buildpack-deps:{{ os_release }}-curl
+
+# Set build-time argument for build version, with a default value
+ARG IMAGE_BUILD_VERSION=v0.0.0
+ENV IMAGE_BUILD_VERSION=${IMAGE_BUILD_VERSION}
+
+ENV LANG=C.UTF-8
+
+{% if os_name in ['debian', 'ubuntu'] -%}
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+{% endif %}
+
+# Install runtime libraries
+RUN <<RUN_CMD_EOF
+apt-get update
+apt-get install -y --no-install-recommends \
+    curl \
+    iproute2 \
+    libffi8 \
+    liblzma5 \
+    libonig5 \
+    libreadline8 \
+    libsqlite3-0 \
+    libssl3 \
+    libbz2-1.0 \
+    libuuid1 \
+    locales \
+    lsb-release \
+    python3 \
+    python3-pip \
+    python3-yaml \
+    rsyslog \
+    systemd \
+    systemd-cron \
+    sudo
+
+# Clean up APT cache to reduce image size
+apt-get clean
+rm -fR /var/lib/apt/lists/*
+rm -fR /usr/share/doc
+rm -fR /usr/share/man
+RUN_CMD_EOF
+
+ENV PYTHON_PATH=/opt/python{{ python_version }}
+
+# Copy the entire compiled Python directory from the builder stage
+COPY --from=builder ${PYTHON_PATH} ${PYTHON_PATH}
+
+# Create the symlinks to the custom Python installation into the system PATH
+RUN <<RUN_CMD_EOF
+ln -sf ${PYTHON_PATH}/bin/python{{ python_version }} /usr/local/bin/python{{ python_version}}
+ln -sf ${PYTHON_PATH}/bin/pip{{ python_version}} /usr/local/bin/pip3
+ln -sf /usr/local/bin/python{{ python_version }} /usr/local/bin/python3
+
+ln -sf ${PYTHON_PATH}/bin/ansible /usr/local/bin/ansible
+
+python3 --version
+pip3 --version
+ansible --version
+RUN_CMD_EOF
+
+{% include "Dockerfile.ansible.j2" %}
