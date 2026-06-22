@@ -33,7 +33,7 @@ jobs:
 
     runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
 
-    name: Build py${{ matrix.python }}-${{ matrix.os }}-${{ matrix.release }}-${{ matrix.platform }}
+    name: Build py${{ matrix.python }}-${{ matrix.os-config.os }}-${{ matrix.os-config.release }}-${{ matrix.platform }}
 
     steps:
       - name: Checkout
@@ -68,13 +68,13 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: images/${{ matrix.python }}/${{ matrix.os }}/${{ matrix.release }}/Dockerfile
+          file: images/${{ matrix.python }}/${{ matrix.os-config.os }}/${{ matrix.os-config.release }}/Dockerfile
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: IMAGE_BUILD_VERSION=${{ github.ref_name }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=py${{ matrix.python }}-${{ matrix.os }}-${{ matrix.release }}-${{ env.PLATFORM_PAIR }}
-          cache-to: type=gha,mode=max,scope=py${{ matrix.python }}-${{ matrix.os }}-${{ matrix.release }}-${{ env.PLATFORM_PAIR }}
+          cache-from: type=gha,scope=py${{ matrix.python }}-${{ matrix.os-config.os }}-${{ matrix.os-config.release }}-${{ env.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=py${{ matrix.python }}-${{ matrix.os-config.os }}-${{ matrix.os-config.release }}-${{ env.PLATFORM_PAIR }}
 
       - name: Export digest
         run: |
@@ -85,7 +85,7 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v7
         with:
-          name: digest-py${{ matrix.python }}-${{ matrix.os }}-${{ matrix.release }}-${{ env.PLATFORM_PAIR }}
+          name: digest-py${{ matrix.python }}-${{ matrix.os-config.os }}-${{ matrix.os-config.release }}-${{ env.PLATFORM_PAIR }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
@@ -112,7 +112,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
-          pattern: digest-py${{ matrix.python }}-${{ matrix.os }}-${{ matrix.release }}-*
+          pattern: digest-py${{ matrix.python }}-${{ matrix.os-config.os }}-${{ matrix.os-config.release }}-*
           merge-multiple: true
 
       - name: Set up Docker Buildx
@@ -130,8 +130,8 @@ jobs:
         run: |
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
           PYTHON="${{ matrix.python }}"
-          OS="${{ matrix.os }}"
-          RELEASE="${{ matrix.release }}"
+          OS="${{ matrix.os-config.os }}"
+          RELEASE="${{ matrix.os-config.release }}"
           SUFFIX="-${OS}-${RELEASE}-py${PYTHON}"
 
           ARGS=""
