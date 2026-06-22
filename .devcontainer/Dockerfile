@@ -24,7 +24,7 @@ chmod 0440 /etc/sudoers.d/$USERNAME
 chsh -s /bin/bash $USERNAME
 RUN_CMD_EOF
 
-# Install Docker CLI and other necessary tools
+# Install Docker CLI, buildx, and other necessary tools
 RUN <<RUN_CMD_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
@@ -44,7 +44,9 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
        > /etc/apt/sources.list.d/docker.list
 
 apt-get update
-apt-get install -y --no-install-recommends docker-ce-cli
+apt-get install -y --no-install-recommends \
+    docker-ce-cli \
+    docker-buildx-plugin
 
 # Clean up APT cache to reduce image size
 rm -rf /var/lib/apt/lists/*
