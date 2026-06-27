@@ -77,9 +77,8 @@ ENV PYTHON_PATH=/opt/python3.12/bin/python3.12
 # Compile python-apt explicitly to match the version of Python and pip
 # Note: python-apt requires the legacy setup-tools layout to compile from source
 RUN <<BUILD_PYTHON_APT_EOF
-. /etc/os-release
 ${PYTHON_PATH} -m pip install --no-cache-dir "setuptools<70.0.0"
-${PYTHON_PATH} -m pip install --no-cache-dir git+https://git.launchpad.net/python-apt@${ID}/${VERSION_CODENAME}
+${PYTHON_PATH} -m pip install --no-cache-dir git+https://git.launchpad.net/python-apt@2.6.0
 BUILD_PYTHON_APT_EOF
 
 RUN <<PIP_INSTALL_PYYAML_EOF

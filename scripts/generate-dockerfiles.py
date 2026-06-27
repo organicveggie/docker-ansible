@@ -6,7 +6,7 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
-from combos import OS_DEFAULT_PYTHON_VERSION, all_combos
+from combos import OS_DEFAULT_PYTHON_VERSION, PYTHON_APT_REF, all_combos
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 IMAGES_DIR = REPO_ROOT / "images"
@@ -59,6 +59,7 @@ def generate(default_template_path: Path, custom_template_path: Path) -> None:
                 os_default_python=OS_DEFAULT_PYTHON_VERSION[combo.os_release],
                 os_name=combo.os_name.value,
                 os_release=combo.os_release.value,
+                python_apt_ref=PYTHON_APT_REF[combo.os_release],
             )
         )
         print(
