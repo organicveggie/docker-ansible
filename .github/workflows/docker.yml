@@ -178,6 +178,14 @@ jobs:
       - name: Inspect manifest
         run: |
           docker buildx imagetools inspect ${{ steps.tags.outputs.primary }}
+      
+      # Notify downstream after publishing new tagged releases
+      - name: Trigger downstream build
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          gh api repos/organicveggie/ansible-devcontainer/dispatches -f event_type=base-image-updated
+        env:
+          GH_TOKEN: ${{ secrets.WORKFLOW_NOTIFY_PAT }}
 
   update-readme:
     if: startsWith(github.ref, 'refs/tags/v')
