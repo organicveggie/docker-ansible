@@ -3,7 +3,7 @@
 # ==========================================
 FROM buildpack-deps:{{ os_release }} AS builder
 
-RUN <<RUN_CMD_EOF
+RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
     build-essential \
@@ -33,14 +33,14 @@ apt-get clean
 rm -fR /var/lib/apt/lists/*
 rm -fR /usr/share/doc
 rm -fR /usr/share/man
-RUN_CMD_EOF
+APT_INSTALL_BUILD_DEPS_EOF
 
 # Install dependencies into a dedicated isolated folder
-RUN --mount=type=bind,source=images/requirements.txt,target=/tmp/requirements.txt <<RUN_CMD_EOF
+RUN --mount=type=bind,source=images/requirements.txt,target=/tmp/requirements.txt <<PIP_INSTALL_ANSIBLE_EOF
 mkdir /deps
 python3 -m pip install --no-cache-dir --upgrade pip
 python3 -m pip install --no-cache-dir --target=/deps -r /tmp/requirements.txt
-RUN_CMD_EOF
+PIP_INSTALL_ANSIBLE_EOF
 
 # ==========================================
 # Stage 2: Final Clean Runtime
@@ -64,7 +64,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 {% endif %}
 
 # Install runtime libraries
-RUN <<RUN_CMD_EOF
+RUN <<APT_INSTALL_RUNTIME_LIBS_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
     curl \
@@ -87,12 +87,15 @@ apt-get install -y --no-install-recommends \
     systemd-cron \
     sudo
 
+# Remove useless Python environment warning flag.
+rm -rf /usr/lib/python{{ os_default_python }}/EXTERNALLY-MANAGED
+
 # Clean up APT cache to reduce image size
 apt-get clean
 rm -fR /var/lib/apt/lists/*
 rm -fR /usr/share/doc
 rm -fR /usr/share/man
-RUN_CMD_EOF
+APT_INSTALL_RUNTIME_LIBS_EOF
 
 # Copy the isolated dependencies from the builder
 COPY --from=builder /deps /usr/lib/python3/dist-packages

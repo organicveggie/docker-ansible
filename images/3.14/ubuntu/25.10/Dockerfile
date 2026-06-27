@@ -2,18 +2,18 @@
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
 FROM buildpack-deps:25.10 AS version-resolver
-RUN <<RUN_CMD_EOF
+RUN <<APT_CURL_EOF
 apt-get update
-apt-get install -y curl
+apt-get install --no-install-recommends -y curl
 rm -rf /var/lib/apt/lists/*
-RUN_CMD_EOF
+APT_CURL_EOF
 
 # Resolve the version and save it to a file
-RUN <<RUN_CMD_EOF
+RUN <<LATEST_PY_EOF
 set -eux
 LATEST_PY=$(curl -s https://www.python.org/ftp/python/ | grep -o '3\.14\.[0-9]\+/' | cut -d '/' -f1 | sort -V | tail -n1)
 echo "${LATEST_PY}" > /tmp/python_version
-RUN_CMD_EOF
+LATEST_PY_EOF
 
 # ==========================================
 # Stage 2: Build Environment
@@ -26,11 +26,12 @@ ENV LANG=C.UTF-8
 ENV DEBIAN_FRONTEND=noninteractive
 
 
-RUN <<RUN_CMD_EOF
+RUN <<INSTALL_BUILD_DEPS_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    libapt-pkg-dev \
     libbz2-dev \
     libdb5.3-dev \
     libexpat1-dev \
@@ -43,12 +44,13 @@ apt-get install -y --no-install-recommends \
     libsqlite3-dev \
     libssl-dev \
     libuuid1 \
+    libyaml-dev \
     zlib1g-dev
-RUN_CMD_EOF
+INSTALL_BUILD_DEPS_EOF
 
 # Resolve, download, and compile the latest Python 3.14.x
 COPY --from=version-resolver /tmp/python_version /tmp/python_version
-RUN <<RUN_CMD_EOF
+RUN <<BUILD_PYTHON_EOF
 set -eux
 VERSION=$(cat /tmp/python_version)
 echo "Building Python ${VERSION}..."
@@ -65,9 +67,25 @@ cd "Python-${VERSION}"
 
 make -j$(nproc)
 make install
-RUN_CMD_EOF
 
-RUN <<RUN_CMD_EOF
+# Remove useless Python environment warning flag.
+rm -rf /usr/lib/python3.13/EXTERNALLY-MANAGED
+BUILD_PYTHON_EOF
+
+ENV PYTHON_PATH=/opt/python3.14/bin/python3.14
+
+# Compile python-apt explicitly to match the version of Python and pip
+# Note: python-apt requires the legacy setup-tools layout to compile from source
+RUN <<BUILD_PYTHON_APT_EOF
+${PYTHON_PATH} -m pip install --no-cache-dir "setuptools<70.0.0"
+${PYTHON_PATH} -m pip install --no-cache-dir git+https://git.launchpad.net/python-apt@main
+BUILD_PYTHON_APT_EOF
+
+RUN <<PIP_INSTALL_PYYAML_EOF
+${PYTHON_PATH} -m pip install --no-cache-dir git+https://github.com/yaml/pyyaml@main
+PIP_INSTALL_PYYAML_EOF
+
+RUN <<ANSIBLE_DEPS_EOF
 # Install required libraries for installing Ansible
 apt-get install -y --no-install-recommends \
     libffi-dev \
@@ -75,15 +93,12 @@ apt-get install -y --no-install-recommends \
     libssl-dev \
     libyaml-dev
 rm -rf /var/lib/apt/lists/*
-RUN_CMD_EOF
-
-ENV PYTHON_PATH=/opt/python3.14/bin/python3.14
+ANSIBLE_DEPS_EOF
 
 # Install Ansible via Pip
-RUN --mount=type=bind,source=images/requirements.txt,target=/tmp/requirements.txt <<RUN_CMD_EOF
-${PYTHON_PATH} -m pip install --no-cache-dir --upgrade pip
+RUN --mount=type=bind,source=images/requirements.txt,target=/tmp/requirements.txt <<PIP_INSTALL_ANSIBLE_EOF
 ${PYTHON_PATH} -m pip install --no-cache-dir -r /tmp/requirements.txt
-RUN_CMD_EOF
+PIP_INSTALL_ANSIBLE_EOF
 
 # ==========================================
 # Stage 3: Final Lightweight Runtime Image
@@ -101,7 +116,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 
 # Install runtime libraries
-RUN <<RUN_CMD_EOF
+RUN <<APT_INSTALL_RUNTIME_LIBS_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
     curl \
@@ -115,10 +130,6 @@ apt-get install -y --no-install-recommends \
     libbz2-1.0 \
     libuuid1 \
     locales \
-    lsb-release \
-    python3 \
-    python3-pip \
-    python3-yaml \
     rsyslog \
     systemd \
     systemd-cron \
@@ -129,7 +140,7 @@ apt-get clean
 rm -fR /var/lib/apt/lists/*
 rm -fR /usr/share/doc
 rm -fR /usr/share/man
-RUN_CMD_EOF
+APT_INSTALL_RUNTIME_LIBS_EOF
 
 ENV PYTHON_PATH=/opt/python3.14
 
@@ -137,19 +148,20 @@ ENV PYTHON_PATH=/opt/python3.14
 COPY --from=builder ${PYTHON_PATH} ${PYTHON_PATH}
 
 # Create the symlinks to the custom Python installation into the system PATH
-RUN <<RUN_CMD_EOF
+RUN <<SYMLINK_PYTHON_EOF
 ln -sf ${PYTHON_PATH}/bin/python3.14 /usr/local/bin/python3.14
 ln -sf ${PYTHON_PATH}/bin/pip3.14 /usr/local/bin/pip3
 ln -sf /usr/local/bin/python3.14 /usr/local/bin/python3
 
 ln -sf ${PYTHON_PATH}/bin/ansible /usr/local/bin/ansible
+ln -sf ${PYTHON_PATH}/bin/ansible-lint /usr/local/bin/ansible-lint
 
 python3 --version
 pip3 --version
 ansible --version
-RUN_CMD_EOF
+SYMLINK_PYTHON_EOF
 
-RUN <<RUN_CMD_EOF
+RUN <<RUN_CLEANUP_EOF
 # Remove useless Python environment warning flag.
 rm -rf /usr/lib/python3.13/EXTERNALLY-MANAGED
 
@@ -157,27 +169,27 @@ sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
 # Fix potential UTF-8 errors with ansible-test.
 locale-gen en_US.UTF-8
-RUN_CMD_EOF
+RUN_CLEANUP_EOF
 
 COPY images/initctl_faker .
-RUN <<RUN_CMD_EOF
+RUN <<INSTALL_INITCTL_EOF
 chmod +x initctl_faker
 rm -fr /sbin/initctl
 ln -s /initctl_faker /sbin/initctl
-RUN_CMD_EOF
+INSTALL_INITCTL_EOF
 
 # Install Ansible inventory file.
-RUN <<RUN_CMD_EOF
+RUN <<ANSIBLE_INVENTORY_EOF
 mkdir -p /etc/ansible
 echo "[local]\nlocalhost ansible_connection=local" > /etc/ansible/hosts
-RUN_CMD_EOF
+ANSIBLE_INVENTORY_EOF
 
 # Remove unnecessary getty and udev targets that result in high CPU usage when using
 # multiple containers with Molecule (https://github.com/ansible/molecule/issues/1104)
-RUN <<RUN_CMD_EOF
+RUN <<CLEANUP_SYSTEMD_EOF
 rm -f /lib/systemd/system/systemd*udev*
 rm -f /lib/systemd/system/getty.target
-RUN_CMD_EOF
+CLEANUP_SYSTEMD_EOF
 
 # Define image labels
 LABEL org.opencontainers.image.authors="Sean Laurent" \
