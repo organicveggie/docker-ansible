@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:{{ os_release }} AS builder
+FROM buildpack-deps:{{ os_release }}@{{ buildpack_deps_digest }} AS builder
 
 RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
@@ -47,9 +47,9 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 
 {% if os_name == 'debian' %}
-FROM debian:{{ os_release }}-slim
+FROM debian:{{ os_release }}-slim@{{ base_image_digest }}
 {% else %}
-FROM {{ os_name }}:{{ os_release }}
+FROM {{ os_name }}:{{ os_release }}@{{ base_image_digest }}
 {% endif %}
 
 # Set build-time argument for build version, with a default value
