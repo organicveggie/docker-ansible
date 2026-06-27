@@ -59,6 +59,17 @@ OS_DEFAULT_PYTHON_VERSION: dict[OSRelease, str] = {
     OSRelease.RESOLUTE: "3.14",
 }
 
+# python-apt git ref compatible with each OS's libapt-pkg version.
+# Bookworm ships apt 2.6.x; IsSecurityUpdate was added in apt 2.7.x so
+# main branch fails to compile on Bookworm.
+PYTHON_APT_REF: dict[OSRelease, str] = {
+    OSRelease.BOOKWORM: "2.6.0",
+    OSRelease.TRIXIE: "main",
+    OSRelease.NOBLE: "main",
+    OSRelease.QUESTING: "main",
+    OSRelease.RESOLUTE: "main",
+}
+
 PYTHON_VERSIONS: list[str] = ["3.12", "3.13", "3.14"]
 
 OS_RELEASES: list[OSRelease] = [

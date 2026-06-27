@@ -1,4 +1,4 @@
-RUN <<RUN_CMD_EOF
+RUN <<RUN_CLEANUP_EOF
 # Remove useless Python environment warning flag.
 rm -rf /usr/lib/python{{ os_default_python }}/EXTERNALLY-MANAGED
 
@@ -6,27 +6,27 @@ sed -i 's/^\($ModLoad imklog\)/#\1/' /etc/rsyslog.conf
 
 # Fix potential UTF-8 errors with ansible-test.
 locale-gen en_US.UTF-8
-RUN_CMD_EOF
+RUN_CLEANUP_EOF
 
 COPY images/initctl_faker .
-RUN <<RUN_CMD_EOF
+RUN <<INSTALL_INITCTL_EOF
 chmod +x initctl_faker
 rm -fr /sbin/initctl
 ln -s /initctl_faker /sbin/initctl
-RUN_CMD_EOF
+INSTALL_INITCTL_EOF
 
 # Install Ansible inventory file.
-RUN <<RUN_CMD_EOF
+RUN <<ANSIBLE_INVENTORY_EOF
 mkdir -p /etc/ansible
 echo "[local]\nlocalhost ansible_connection=local" > /etc/ansible/hosts
-RUN_CMD_EOF
+ANSIBLE_INVENTORY_EOF
 
 # Remove unnecessary getty and udev targets that result in high CPU usage when using
 # multiple containers with Molecule (https://github.com/ansible/molecule/issues/1104)
-RUN <<RUN_CMD_EOF
+RUN <<CLEANUP_SYSTEMD_EOF
 rm -f /lib/systemd/system/systemd*udev*
 rm -f /lib/systemd/system/getty.target
-RUN_CMD_EOF
+CLEANUP_SYSTEMD_EOF
 
 # Define image labels
 LABEL org.opencontainers.image.authors="Sean Laurent" \
