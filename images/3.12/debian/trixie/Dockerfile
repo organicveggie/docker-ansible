@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
-FROM buildpack-deps:trixie AS version-resolver
+FROM buildpack-deps:trixie@sha256:eda1874219c1d6ccb93f869792ce6c9cca23ca17ada1def6581ec9503a9a9888 AS version-resolver
 RUN <<APT_CURL_EOF
 apt-get update
 apt-get install --no-install-recommends -y curl
@@ -18,7 +18,7 @@ LATEST_PY_EOF
 # ==========================================
 # Stage 2: Build Environment
 # ==========================================
-FROM buildpack-deps:trixie AS builder
+FROM buildpack-deps:trixie@sha256:eda1874219c1d6ccb93f869792ce6c9cca23ca17ada1def6581ec9503a9a9888 AS builder
 
 ENV LANG=C.UTF-8
 
@@ -103,7 +103,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 # Stage 3: Final Lightweight Runtime Image
 # ==========================================
-FROM buildpack-deps:trixie-curl
+FROM buildpack-deps:trixie-curl@sha256:29d6dfb5905c150d4d1bf4bf59cdf14eb08b7525e42756f37e3403080f6b9e37
 
 # Set build-time argument for build version, with a default value
 ARG IMAGE_BUILD_VERSION=v0.0.0

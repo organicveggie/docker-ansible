@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
-FROM buildpack-deps:25.10 AS version-resolver
+FROM buildpack-deps:25.10@sha256:402af4186bbc6a580d8fd82b461c00c857bb07daa4fa8819a86e07d55a22873e AS version-resolver
 RUN <<APT_CURL_EOF
 apt-get update
 apt-get install --no-install-recommends -y curl
@@ -18,7 +18,7 @@ LATEST_PY_EOF
 # ==========================================
 # Stage 2: Build Environment
 # ==========================================
-FROM buildpack-deps:25.10 AS builder
+FROM buildpack-deps:25.10@sha256:402af4186bbc6a580d8fd82b461c00c857bb07daa4fa8819a86e07d55a22873e AS builder
 
 ENV LANG=C.UTF-8
 
@@ -103,7 +103,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 # Stage 3: Final Lightweight Runtime Image
 # ==========================================
-FROM buildpack-deps:25.10-curl
+FROM buildpack-deps:25.10-curl@sha256:28d98a145b31e6a9560e639c2ae0d62e4776c9ba89f40bca2c07ffaa80418dfb
 
 # Set build-time argument for build version, with a default value
 ARG IMAGE_BUILD_VERSION=v0.0.0

@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:trixie AS builder
+FROM buildpack-deps:trixie@sha256:eda1874219c1d6ccb93f869792ce6c9cca23ca17ada1def6581ec9503a9a9888 AS builder
 
 RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
@@ -47,7 +47,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 
 
-FROM debian:trixie-slim
+FROM debian:trixie-slim@sha256:28de0877c2189802884ccd20f15ee41c203573bd87bb6b883f5f46362d24c5c2
 
 
 # Set build-time argument for build version, with a default value

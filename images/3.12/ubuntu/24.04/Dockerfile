@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:24.04 AS builder
+FROM buildpack-deps:24.04@sha256:4618aa79a611f1a729f8a3fcef7ea3771b6cc4dacb41b15f8d333756dd2c13b6 AS builder
 
 RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
@@ -47,7 +47,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 
 
-FROM ubuntu:24.04
+FROM ubuntu:24.04@sha256:786a8b558f7be160c6c8c4a54f9a57274f3b4fb1491cf65146521ae77ff1dc54
 
 
 # Set build-time argument for build version, with a default value
