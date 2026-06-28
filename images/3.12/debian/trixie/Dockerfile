@@ -121,6 +121,7 @@ apt-get update
 apt-get install -y --no-install-recommends \
     curl \
     iproute2 \
+    less \
     libffi8 \
     liblzma5 \
     libonig5 \
