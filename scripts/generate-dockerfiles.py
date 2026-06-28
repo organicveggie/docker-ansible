@@ -27,20 +27,27 @@ def fetch_image_digest(image: str, tag: str) -> str:
 
     token_resp = requests.get(
         "https://auth.docker.io/token",
-        params={"service": "registry.docker.io", "scope": f"repository:{namespace}:pull"},
+        params={
+            "service": "registry.docker.io",
+            "scope": f"repository:{namespace}:pull",
+        },
         timeout=30,
     )
     token_resp.raise_for_status()
     token = token_resp.json()["token"]
 
+    url = f"https://registry-1.docker.io/v2/{namespace}/manifests/{tag}"
+    print(f"Querying {url}")
     manifest_resp = requests.head(
-        f"https://registry-1.docker.io/v2/{namespace}/manifests/{tag}",
+        url,
         headers={
             "Authorization": f"Bearer {token}",
-            "Accept": ",".join([
-                "application/vnd.oci.image.index.v1+json",
-                "application/vnd.docker.distribution.manifest.list.v2+json",
-            ]),
+            "Accept": ",".join(
+                [
+                    "application/vnd.oci.image.index.v1+json",
+                    "application/vnd.docker.distribution.manifest.list.v2+json",
+                ]
+            ),
         },
         timeout=30,
     )
@@ -76,7 +83,9 @@ def generate(default_template_path: Path, custom_template_path: Path) -> None:
 
     for combo in all_combos():
         py_major, py_minor = combo.python.split(".")
-        out_dir = IMAGES_DIR / combo.python / combo.os_name.value / combo.os_release.value
+        out_dir = (
+            IMAGES_DIR / combo.python / combo.os_name.value / combo.os_release.value
+        )
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / "Dockerfile"
 
@@ -88,7 +97,10 @@ def generate(default_template_path: Path, custom_template_path: Path) -> None:
             template = custom_template
             template_path = custom_template_path
 
-        buildpack_deps_digest = fetch_image_digest("buildpack-deps", combo.os_release.value)
+        print(f"Fetching buildpack_deps_digest for {combo.os_release.value}")
+        buildpack_deps_digest = fetch_image_digest(
+            "buildpack-deps", combo.os_release.value
+        )
 
         if is_default:
             if combo.os_name.value == "debian":

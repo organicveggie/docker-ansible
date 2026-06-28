@@ -149,16 +149,9 @@ COPY --from=builder ${PYTHON_PATH} ${PYTHON_PATH}
 
 # Create the symlinks to the custom Python installation into the system PATH
 RUN <<SYMLINK_PYTHON_EOF
-ln -sf ${PYTHON_PATH}/bin/python3.14 /usr/local/bin/python3.14
-ln -sf ${PYTHON_PATH}/bin/pip3.14 /usr/local/bin/pip3
-ln -sf /usr/local/bin/python3.14 /usr/local/bin/python3
-
-ln -sf ${PYTHON_PATH}/bin/ansible /usr/local/bin/ansible
-ln -sf ${PYTHON_PATH}/bin/ansible-lint /usr/local/bin/ansible-lint
-
-python3 --version
-pip3 --version
-ansible --version
+find ${PYTHON_PATH}/bin -maxdepth 1 -type f -executable | while read -r f; do
+  ln -sf "$f" /usr/local/bin/"$(basename "$f")"
+done
 SYMLINK_PYTHON_EOF
 
 RUN <<RUN_CLEANUP_EOF
