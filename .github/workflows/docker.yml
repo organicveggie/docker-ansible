@@ -204,8 +204,17 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.PR_BYPASS_APP_ID }}
+          private-key: ${{ secrets.PR_BYPASS_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Regenerate README tags table
         run: python3 scripts/update_readme_tags.py --version "${{ github.ref_name }}"
@@ -219,5 +228,9 @@ jobs:
             echo "README.md already up to date"
             exit 0
           fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git commit -m "docs: update tags table for ${{ github.ref_name }} [skip ci]"
           git push origin HEAD:main
