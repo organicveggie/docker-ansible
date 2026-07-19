@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
-FROM buildpack-deps:trixie@sha256:eda1874219c1d6ccb93f869792ce6c9cca23ca17ada1def6581ec9503a9a9888 AS version-resolver
+FROM buildpack-deps:trixie@sha256:ed1cd9d906c3dc8b4b29c391abd40b8f397951418a74802df688b22fea2cd61f AS version-resolver
 RUN <<APT_CURL_EOF
 apt-get update
 apt-get install --no-install-recommends -y curl
@@ -18,7 +18,7 @@ LATEST_PY_EOF
 # ==========================================
 # Stage 2: Build Environment
 # ==========================================
-FROM buildpack-deps:trixie@sha256:eda1874219c1d6ccb93f869792ce6c9cca23ca17ada1def6581ec9503a9a9888 AS builder
+FROM buildpack-deps:trixie@sha256:ed1cd9d906c3dc8b4b29c391abd40b8f397951418a74802df688b22fea2cd61f AS builder
 
 ENV LANG=C.UTF-8
 
