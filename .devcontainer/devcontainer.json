@@ -28,15 +28,13 @@
       "enableNonRootDocker": "true"
     }
   },
-  "containerEnv": {
-    "GPG_TTY": "${localEnv:GPG_TTY}"
-  },
   "mounts": [
-    "source=docker-ansible-claude-code,target=/home/vscode/.claude,type=volume",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude/CLAUDE.md,target=/home/vscode/.claude/CLAUDE.md,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude/.credentials.json,target=/home/vscode/.claude/.credentials.json,type=bind,consistency=cached"
+    "source=/run/user/1100/gnupg/S.gpg-agent,target=/run/user/1100/gnupg/S.gpg-agent,type=bind",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg/git-public-key.asc,target=/home/vscode/.gnupg/git-public-key.asc,type=bind,consistency=cached,readonly",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached,readonly"
   ],
-  "postAttachCommand": "sudo chown vscode:vscode /home/vscode/.claude",
-  "postCreateCommand": "python --version && pip --version",
-  "updateContentCommand": "bash ${containerWorkspaceFolder}/.devcontainer/update-content.sh ${containerWorkspaceFolder}"
+  "containerEnv": {
+    "GPG_TTY": "/dev/tty"
+  },
+  "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh ${containerWorkspaceFolder}"
 }
