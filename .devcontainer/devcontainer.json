@@ -6,6 +6,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "github.vscode-pull-request-github",
         "ms-python.python",
         "ms-python.black-formatter",
         "redhat.ansible",
