@@ -1,17 +1,91 @@
 version: 2
 updates:
+  # Debian Bookworm
   - package-ecosystem: "docker"
     directories:
-      - "/images/3.12/*/*/"
-      - "/images/3.13/*/*/"
-      - "/images/3.14/*/*/"
+      - "/images/3.12/debian/bookworm/"
+      - "/images/3.13/debian/bookworm/"
+      - "/images/3.14/debian/bookworm/"
     schedule:
       interval: "daily"
+    groups:
+      bookworm-images:
+        patterns:
+          - "*"
 
+  # Debian Trixie
+  - package-ecosystem: "docker"
+    directories:
+      - "/images/3.12/debian/trixie/"
+      - "/images/3.13/debian/trixie/"
+      - "/images/3.14/debian/trixie/"
+    schedule:
+      interval: "daily"
+    groups:
+      bookworm-images:
+        patterns:
+          - "*"
+
+  # Ubuntu 24.04
+  - package-ecosystem: "docker"
+    directories:
+      - "/images/3.12/ubuntu/24.04/"
+      - "/images/3.13/ubuntu/24.04/"
+      - "/images/3.14/ubuntu/24.04/"
+    schedule:
+      interval: "daily"
+    groups:
+      bookworm-images:
+        patterns:
+          - "*"
+
+  # Ubuntu 25.10
+  - package-ecosystem: "docker"
+    directories:
+      - "/images/3.12/ubuntu/25.10/"
+      - "/images/3.13/ubuntu/25.10/"
+      - "/images/3.14/ubuntu/25.10/"
+    schedule:
+      interval: "daily"
+    groups:
+      bookworm-images:
+        patterns:
+          - "*"
+
+  # Ubuntu 26.04
+  - package-ecosystem: "docker"
+    directories:
+      - "/images/3.12/ubuntu/26.04/"
+      - "/images/3.13/ubuntu/26.04/"
+      - "/images/3.14/ubuntu/26.04/"
+    schedule:
+      interval: "daily"
+    groups:
+      bookworm-images:
+        patterns:
+          - "*"
+
+  # Ansible
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      ansible-updates:
+        patterns:
+          - "ansible*"
+          - "molecule*"
+
+  # Pip excluding Ansible
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      non-ansible-updates:
+        exclude-patterns:
+          - "ansible*"
+          - "molecule*"
 
   - package-ecosystem: github-actions
     directory: /
