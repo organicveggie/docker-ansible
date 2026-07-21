@@ -36,5 +36,10 @@
   "containerEnv": {
     "GPG_TTY": "/dev/tty"
   },
+  "remoteEnv": {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PAGER": "cat"
+  },
   "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh ${containerWorkspaceFolder}"
 }
