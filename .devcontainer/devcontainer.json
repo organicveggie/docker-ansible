@@ -12,7 +12,13 @@
         "redhat.ansible",
         "redhat.vscode-yaml",
         "samuelcolvin.jinjahtml"
-      ]
+      ],
+      "settings": {
+        "git.enableCommitSigning": true,
+        "git.config": {
+          "gpg.format": "ssh"
+        }
+      }
     }
   },
   // Features to add to the dev container. More info: https://containers.dev/features.
@@ -28,18 +34,11 @@
       "enableNonRootDocker": "true"
     }
   },
-  "mounts": [
-    "source=/run/user/1100/gnupg/S.gpg-agent,target=/run/user/1100/gnupg/S.gpg-agent,type=bind",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg/git-public-key.asc,target=/home/vscode/.gnupg/git-public-key.asc,type=bind,consistency=cached,readonly",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached,readonly"
-  ],
-  "containerEnv": {
-    "GPG_TTY": "/dev/tty"
-  },
   "remoteEnv": {
     "LANG": "C.UTF-8",
     "LC_ALL": "C.UTF-8",
     "PAGER": "cat"
   },
-  "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh ${containerWorkspaceFolder}"
+  "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh ${containerWorkspaceFolder}",
+  "postStartCommand": "git config --global gpg.format ssh"
 }

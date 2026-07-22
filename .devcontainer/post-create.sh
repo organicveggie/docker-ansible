@@ -1,11 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
 WORKSPACE_DIR=$1
 
-set -x
+GIT_CFG_SD=`git config get --all safe.directory |grep "${WORKSPACE_DIR}"`
+if [[ -z $GIT_CFG_SD ]]; then
+    git config --local --add safe.directory "${WORKSPACE_DIR}"
+fi
 
-git config --local --add safe.directory "${WORKSPACE_DIR}"
-gpg --import /home/vscode/.gnupg/git-public-key.asc
+set -x
 
 python --version
 pip --version
