@@ -20,7 +20,7 @@ jobs:
           private-key: ${{ secrets.COMBINE_PRS_PRIVATE_KEY }}
 
       - name: Combine Dependabot PRs
-        uses: github/combine-prs@v5
+        uses: github/combine-prs@v5.2.0
         with:
           branch_prefix: "dependabot"
           combine_branch_name: "combined-dependabot-updates"
