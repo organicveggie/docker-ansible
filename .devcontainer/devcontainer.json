@@ -6,12 +6,19 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "github.vscode-pull-request-github",
         "ms-python.python",
         "ms-python.black-formatter",
         "redhat.ansible",
         "redhat.vscode-yaml",
         "samuelcolvin.jinjahtml"
-      ]
+      ],
+      "settings": {
+        "git.enableCommitSigning": true,
+        "git.config": {
+          "gpg.format": "ssh"
+        }
+      }
     }
   },
   // Features to add to the dev container. More info: https://containers.dev/features.
@@ -27,15 +34,11 @@
       "enableNonRootDocker": "true"
     }
   },
-  "containerEnv": {
-    "GPG_TTY": "${localEnv:GPG_TTY}"
+  "remoteEnv": {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "PAGER": "cat"
   },
-  "mounts": [
-    "source=docker-ansible-claude-code,target=/home/vscode/.claude,type=volume",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude/CLAUDE.md,target=/home/vscode/.claude/CLAUDE.md,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.claude/.credentials.json,target=/home/vscode/.claude/.credentials.json,type=bind,consistency=cached"
-  ],
-  "postAttachCommand": "sudo chown vscode:vscode /home/vscode/.claude",
-  "postCreateCommand": "python --version && pip --version",
-  "updateContentCommand": "bash ${containerWorkspaceFolder}/.devcontainer/update-content.sh ${containerWorkspaceFolder}"
+  "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh ${containerWorkspaceFolder}",
+  "postStartCommand": "git config --global gpg.format ssh"
 }
