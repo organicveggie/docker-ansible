@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:trixie@sha256:ed1cd9d906c3dc8b4b29c391abd40b8f397951418a74802df688b22fea2cd61f AS builder
+FROM buildpack-deps:trixie@sha256:aae84bd20debfe55c6f5fcb3289582354f69d73e6ee90694105c1922453ef18a AS builder
 
 RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
