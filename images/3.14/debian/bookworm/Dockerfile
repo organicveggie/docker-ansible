@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
-FROM buildpack-deps:bookworm@sha256:5bfacbc6611775f980cf283fbc86b999517878d39723510687135a0d6366bbee AS version-resolver
+FROM buildpack-deps:bookworm@sha256:7237881f59d74009314351d84575a2babb4549c45caa7364d62ea5e61a574513 AS version-resolver
 RUN <<APT_CURL_EOF
 apt-get update
 apt-get install --no-install-recommends -y curl
@@ -18,7 +18,7 @@ LATEST_PY_EOF
 # ==========================================
 # Stage 2: Build Environment
 # ==========================================
-FROM buildpack-deps:bookworm@sha256:5bfacbc6611775f980cf283fbc86b999517878d39723510687135a0d6366bbee AS builder
+FROM buildpack-deps:bookworm@sha256:7237881f59d74009314351d84575a2babb4549c45caa7364d62ea5e61a574513 AS builder
 
 ENV LANG=C.UTF-8
 
@@ -88,8 +88,10 @@ PIP_INSTALL_PYYAML_EOF
 RUN <<ANSIBLE_DEPS_EOF
 # Install required libraries for installing Ansible
 apt-get install -y --no-install-recommends \
+    gcc \
     libffi-dev \
     libonig-dev \
+    libssh-dev \
     libssl-dev \
     libyaml-dev
 rm -rf /var/lib/apt/lists/*
@@ -103,7 +105,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 # Stage 3: Final Lightweight Runtime Image
 # ==========================================
-FROM buildpack-deps:bookworm-curl@sha256:001d0ec7cc18a4e3d7c62706a04016c7baac489af1cc0be0c4363bf575559c9a
+FROM buildpack-deps:bookworm-curl@sha256:00597ff108f63db163fdbc31a830ce9e0a51cd9da548f0b318e03267a0594eb4
 
 # Set build-time argument for build version, with a default value
 ARG IMAGE_BUILD_VERSION=v0.0.0

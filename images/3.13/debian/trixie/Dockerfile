@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
-FROM buildpack-deps:trixie@sha256:aae84bd20debfe55c6f5fcb3289582354f69d73e6ee90694105c1922453ef18a AS version-resolver
+FROM buildpack-deps:trixie@sha256:3c55df66bea98808f842d6d59aa498012888f4cf82874c4a7f2b3a42a2c9c82e AS version-resolver
 RUN <<APT_CURL_EOF
 apt-get update
 apt-get install --no-install-recommends -y curl
@@ -18,7 +18,7 @@ LATEST_PY_EOF
 # ==========================================
 # Stage 2: Build Environment
 # ==========================================
-FROM buildpack-deps:trixie@sha256:aae84bd20debfe55c6f5fcb3289582354f69d73e6ee90694105c1922453ef18a AS builder
+FROM buildpack-deps:trixie@sha256:3c55df66bea98808f842d6d59aa498012888f4cf82874c4a7f2b3a42a2c9c82e AS builder
 
 ENV LANG=C.UTF-8
 
@@ -88,8 +88,10 @@ PIP_INSTALL_PYYAML_EOF
 RUN <<ANSIBLE_DEPS_EOF
 # Install required libraries for installing Ansible
 apt-get install -y --no-install-recommends \
+    gcc \
     libffi-dev \
     libonig-dev \
+    libssh-dev \
     libssl-dev \
     libyaml-dev
 rm -rf /var/lib/apt/lists/*
@@ -103,7 +105,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 # Stage 3: Final Lightweight Runtime Image
 # ==========================================
-FROM buildpack-deps:trixie-curl@sha256:ef554489e8f8b0245ef3cb2742b4c6b6e53c43bd64366b13f624982c854af2eb
+FROM buildpack-deps:trixie-curl@sha256:94754d58ac54626fa712c5c06535980417dc44f82c883f9b10f7059dc9000f5f
 
 # Set build-time argument for build version, with a default value
 ARG IMAGE_BUILD_VERSION=v0.0.0

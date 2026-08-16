@@ -1,13 +1,14 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:26.04@sha256:8329fd0bcaadb5b6ec6a5a1cd467d12c9a39c5e11d1057e51ff18d0f7267b469 AS builder
+FROM buildpack-deps:26.04@sha256:c1eb6ada2ef8095309cccf5b42524cc7798fd0566dba33c19a6c3f2fbe16cd3a AS builder
 
 RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    gcc \
     libbz2-dev \
     libdb5.3-dev \
     libexpat1-dev \
@@ -19,6 +20,7 @@ apt-get install -y --no-install-recommends \
     libonig-dev \
     libreadline-dev \
     libsqlite3-dev \
+    libssh-dev \
     libssl-dev \
     libuuid1 \
     python3 \
@@ -47,7 +49,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 
 
-FROM ubuntu:26.04@sha256:53958ec7b67c2c9355df922dd08dbf0360611f8c3cdb656875e81873db9ffdba
+FROM ubuntu:26.04@sha256:678c6550cc43645e08669028bc177f50be4e7c5b8cca677067b1914d4afc7a03
 
 
 # Set build-time argument for build version, with a default value

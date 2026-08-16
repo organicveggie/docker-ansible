@@ -88,8 +88,10 @@ PIP_INSTALL_PYYAML_EOF
 RUN <<ANSIBLE_DEPS_EOF
 # Install required libraries for installing Ansible
 apt-get install -y --no-install-recommends \
+    gcc \
     libffi-dev \
     libonig-dev \
+    libssh-dev \
     libssl-dev \
     libyaml-dev
 rm -rf /var/lib/apt/lists/*
