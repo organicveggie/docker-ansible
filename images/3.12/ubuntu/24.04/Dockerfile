@@ -8,6 +8,7 @@ apt-get update
 apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    gcc \
     libbz2-dev \
     libdb5.3-dev \
     libexpat1-dev \
@@ -19,6 +20,7 @@ apt-get install -y --no-install-recommends \
     libonig-dev \
     libreadline-dev \
     libsqlite3-dev \
+    libssh-dev \
     libssl-dev \
     libuuid1 \
     python3 \
@@ -47,7 +49,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 
 
-FROM ubuntu:24.04@sha256:4fbb8e6a8395de5a7550b33509421a2bafbc0aab6c06ba2cef9ebffbc7092d90
+FROM ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea
 
 
 # Set build-time argument for build version, with a default value

@@ -1,13 +1,14 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:trixie@sha256:aae84bd20debfe55c6f5fcb3289582354f69d73e6ee90694105c1922453ef18a AS builder
+FROM buildpack-deps:trixie@sha256:3c55df66bea98808f842d6d59aa498012888f4cf82874c4a7f2b3a42a2c9c82e AS builder
 
 RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
 apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    gcc \
     libbz2-dev \
     libdb5.3-dev \
     libexpat1-dev \
@@ -19,6 +20,7 @@ apt-get install -y --no-install-recommends \
     libonig-dev \
     libreadline-dev \
     libsqlite3-dev \
+    libssh-dev \
     libssl-dev \
     libuuid1 \
     python3 \

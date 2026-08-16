@@ -8,6 +8,7 @@ apt-get update
 apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    gcc \
     libbz2-dev \
     libdb5.3-dev \
     libexpat1-dev \
@@ -19,6 +20,7 @@ apt-get install -y --no-install-recommends \
     libonig-dev \
     libreadline-dev \
     libsqlite3-dev \
+    libssh-dev \
     libssl-dev \
     libuuid1 \
     python3 \
