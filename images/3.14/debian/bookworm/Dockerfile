@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Version Resolver (Always runs, but tiny)
 # ==========================================
-FROM buildpack-deps:bookworm@sha256:7237881f59d74009314351d84575a2babb4549c45caa7364d62ea5e61a574513 AS version-resolver
+FROM buildpack-deps:bookworm@sha256:27afdce3431be65ba05e2d11beab7c2427379ff95712d8165bd016c159587474 AS version-resolver
 RUN <<APT_CURL_EOF
 apt-get update
 apt-get install --no-install-recommends -y curl
@@ -18,7 +18,7 @@ LATEST_PY_EOF
 # ==========================================
 # Stage 2: Build Environment
 # ==========================================
-FROM buildpack-deps:bookworm@sha256:7237881f59d74009314351d84575a2babb4549c45caa7364d62ea5e61a574513 AS builder
+FROM buildpack-deps:bookworm@sha256:27afdce3431be65ba05e2d11beab7c2427379ff95712d8165bd016c159587474 AS builder
 
 ENV LANG=C.UTF-8
 
@@ -105,7 +105,7 @@ PIP_INSTALL_ANSIBLE_EOF
 # ==========================================
 # Stage 3: Final Lightweight Runtime Image
 # ==========================================
-FROM buildpack-deps:bookworm-curl@sha256:00597ff108f63db163fdbc31a830ce9e0a51cd9da548f0b318e03267a0594eb4
+FROM buildpack-deps:bookworm-curl@sha256:c63e1f47b008e42150a551f51443fd5007d737e9951661bd18b0a808db56abbe
 
 # Set build-time argument for build version, with a default value
 ARG IMAGE_BUILD_VERSION=v0.0.0
