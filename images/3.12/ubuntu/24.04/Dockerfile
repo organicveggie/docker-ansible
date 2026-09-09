@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build & Compile Dependencies
 # ==========================================
-FROM buildpack-deps:24.04@sha256:64ae509ccf40ede042d2cdd30d7149450e73ebd4c5362a36768ac727326dafb6 AS builder
+FROM buildpack-deps:24.04@sha256:c2881ab5b526bc3b377a9501a89fec7a82c84f57e89d6cfd2fb9b5cbff75ef7f AS builder
 
 RUN <<APT_INSTALL_BUILD_DEPS_EOF
 apt-get update
